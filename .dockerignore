@@ -1,0 +1,16 @@
+.git
+.github
+.husky
+node_modules
+.nuxt
+.output
+dist
+coverage
+.cache
+*.log
+.env
+.env.*
+!.env.example
+.idea
+.vscode
+/temp/

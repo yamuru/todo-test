@@ -1,4 +1,41 @@
-# Тестовое задание
+# Todo Test: тестовое задание
+
+### Окружение и установка
+
+- Node.js **24.22.2** (или более новый совместимый патч Node 24), npm **11**.
+- Для Docker-запуска достаточно Docker Engine / Docker Desktop с Compose
+
+```bash
+node -v
+npm ci
+npm run dev
+```
+
+Откройте [http://localhost:3000](http://localhost:3000).
+
+### Проверки и тесты
+
+```bash
+npm run lint
+npm run typecheck
+npm run test:run
+npm run format:check
+npm run check
+npm run build
+npm run generate
+```
+
+### Docker
+
+```bash
+docker compose up --build
+```
+
+```bash
+docker-compose up
+```
+
+## Тестовое задание
 
 Перед выполнением работы пожалуйста внимательно прочитайте все требования. Если
 какая-то часть не описана, делать на своё усмотрение.
