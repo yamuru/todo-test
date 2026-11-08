@@ -1,7 +1,7 @@
 <template>
   <div class="app-shell">
     <header class="app-shell__header">
-      <span class="app-shell__brand"> Todo Test </span>
+      <NuxtLink to="/" class="app-shell__brand">Todo Test</NuxtLink>
     </header>
     <main class="app-shell__main" tabindex="-1">
       <slot />
@@ -35,6 +35,8 @@
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-semibold);
     letter-spacing: -0.02em;
+    text-decoration: none;
+    min-height: var(--control-size-sm);
   }
 
   &__main {
@@ -45,7 +47,7 @@
 
   @media (min-width: 40rem) {
     &__main {
-      padding-block: var(--space-16);
+      padding-block: var(--space-10) var(--space-12);
     }
   }
 }

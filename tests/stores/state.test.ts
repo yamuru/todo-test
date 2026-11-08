@@ -811,6 +811,29 @@ describe('draft ownership regressions', () => {
 })
 
 describe('recovery integrity regressions', () => {
+  it('offers all drafts for explicit selection and dismisses recovery without deleting data', () => {
+    const a = savedTab()
+    a.editor.openNote('note')
+    a.editor.changeTitle('Existing draft')
+    a.editor.flushDraft()
+    a.storage.data.set('todo-test:draft:%ZZ:broken', '{')
+    const fresh = tab(a.storage)
+    expect(fresh.editor.offerRecovery().ok).toBe(true)
+    expect(fresh.editor.recoveryChoices).toHaveLength(2)
+    expect(fresh.editor.recovery).toBeNull()
+    const data = new Map(a.storage.data)
+    expect(fresh.editor.dismissRecovery().ok).toBe(true)
+    expect(fresh.editor.recoveryChoices).toEqual([])
+    expect(fresh.editor.recovery).toBeNull()
+    expect(a.storage.data).toEqual(data)
+    expect(fresh.editor.createNew().ok).toBe(true)
+    expect(fresh.editor.dismissRecovery()).toMatchObject({
+      ok: false,
+      error: { code: 'busy' },
+    })
+    expect(fresh.editor.active).toBe(true)
+  })
+
   it('flags a stale first-save draft before restoration and prevents resurrection after remote deletion', () => {
     const a = tab()
     a.editor.createNew()

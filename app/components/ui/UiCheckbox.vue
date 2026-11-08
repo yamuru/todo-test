@@ -6,8 +6,9 @@ const props = withDefaults(
     label: string
     id?: string
     disabled?: boolean
+    visuallyHiddenLabel?: boolean
   }>(),
-  { id: undefined, disabled: false },
+  { id: undefined, disabled: false, visuallyHiddenLabel: false },
 )
 
 const model = defineModel<boolean>({ default: false })
@@ -29,7 +30,11 @@ const inputId = computed(() => props.id ?? generatedId)
       type="checkbox"
       :disabled="disabled"
     />
-    <span class="ui-checkbox__label">{{ label }}</span>
+    <span
+      class="ui-checkbox__label"
+      :class="{ 'visually-hidden': visuallyHiddenLabel }"
+      >{{ label }}</span
+    >
   </label>
 </template>
 

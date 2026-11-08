@@ -22,6 +22,7 @@
     "check": "npm run lint && npm run typecheck && npm run test:run && npm run format:check"
   },
   "dependencies": {
+    "@lucide/vue": "^1.70.0",
     "@pinia/nuxt": "1.0.3",
     "nuxt": "4.6.4",
     "pinia": "^4.1.0",

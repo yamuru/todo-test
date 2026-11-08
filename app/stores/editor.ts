@@ -182,7 +182,7 @@ export function defineEditorStore(
       return persistence.findDrafts()
     }
 
-    function offerDrafts(noteId: string): Result<void> {
+    function offerDrafts(noteId?: string): Result<void> {
       const found = persistence.findDrafts(noteId)
       if (!found.ok) return found
       recoveryChoices.value = found.value
@@ -206,7 +206,7 @@ export function defineEditorStore(
         : success(undefined)
     }
 
-    function offerRecovery(noteId: string): Result<void> {
+    function offerRecovery(noteId?: string): Result<void> {
       if (active.value)
         return failure('busy', 'Сначала завершите текущую сессию')
       const offered = offerDrafts(noteId)
@@ -214,6 +214,14 @@ export function defineEditorStore(
       return recoveryChoices.value.length
         ? success(undefined)
         : failure('not-found', 'Черновик не найден')
+    }
+
+    function dismissRecovery(): Result<void> {
+      if (active.value)
+        return failure('busy', 'Сначала завершите текущую сессию')
+      recoveryChoices.value = []
+      selectedRecovery.value = null
+      return success(undefined)
     }
 
     function restoreDraft(): Result<void> {
@@ -453,6 +461,7 @@ export function defineEditorStore(
       createNew,
       discoverDrafts,
       offerRecovery,
+      dismissRecovery,
       selectRecovery,
       restoreDraft,
       editSavedVersion,
