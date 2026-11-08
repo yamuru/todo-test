@@ -3,6 +3,7 @@ import ConfirmDialog from '~/components/dialog/ConfirmDialog.vue'
 import type { Result } from '~/persistence/result'
 import { useEditorStore } from '~/stores/editor'
 import { useNotesStore } from '~/stores/notes'
+import { createLeaveConfirmation } from '~/utils/leaveConfirmation'
 
 const props = defineProps<{ noteId?: string }>()
 const editor = useEditorStore()
@@ -32,10 +33,11 @@ const confirmOpen = computed({
   },
 })
 const dialogError = ref('')
+const deletionRevision = ref<string>()
 const titleInput = useTemplateRef<{ focus: () => void }>('titleInput')
 const addInput = useTemplateRef<{ focus: () => void }>('addInput')
 const root = useTemplateRef<HTMLElement>('root')
-let resolveLeave: ((allowed: boolean) => void) | undefined
+const leaveConfirmation = createLeaveConfirmation()
 let leaving = false
 const { finish: finishText, schedule: scheduleTextEdit } = useTextEditBoundary(
   () => {
@@ -159,12 +161,15 @@ async function removeTodo(id: string) {
 function ask(kind: NonNullable<typeof confirmation.value>) {
   finishText()
   dialogError.value = ''
+  if (kind === 'delete')
+    deletionRevision.value = note.value
+      ? notes.getEntry(note.value.id)?.revision
+      : undefined
   confirmation.value = kind
 }
 function dismissConfirmation() {
   confirmation.value = null
-  resolveLeave?.(false)
-  resolveLeave = undefined
+  leaveConfirmation.resolve(false)
 }
 async function save() {
   if (busy.value || !editor.active || editor.conflict) return
@@ -203,11 +208,11 @@ async function confirm() {
   const kind = confirmation.value
   if (kind === 'delete') {
     const id = note.value?.id
-    if (!id) {
+    if (!id || !deletionRevision.value) {
       busy.value = false
       return
     }
-    const removed = notes.deleteNote(id)
+    const removed = notes.deleteNote(id, deletionRevision.value)
     if (!removed.ok) {
       dialogError.value = removed.error.message
       busy.value = false
@@ -240,10 +245,7 @@ async function confirm() {
     return
   }
   leaving = true
-  if (resolveLeave) {
-    resolveLeave(true)
-    resolveLeave = undefined
-  } else await router.push('/')
+  if (!leaveConfirmation.resolve(true)) await router.push('/')
 }
 function guardLeave(): boolean | Promise<boolean> {
   if (leaving) return true
@@ -253,11 +255,8 @@ function guardLeave(): boolean | Promise<boolean> {
     return true
   }
   if (!editor.dirty && !newTodo.value.trim()) return report(editor.cancel())
-  if (resolveLeave) return false
   ask('leave')
-  return new Promise((resolve) => {
-    resolveLeave = resolve
-  })
+  return leaveConfirmation.request()
 }
 onBeforeRouteLeave(guardLeave)
 onBeforeRouteUpdate((to, from) =>
@@ -271,7 +270,7 @@ useEditorShortcuts({
   redo: () => atomic(() => editor.redo()),
 })
 onBeforeUnmount(() => {
-  resolveLeave?.(false)
+  leaveConfirmation.resolve(false)
   if (!editor.active) editor.dismissRecovery()
 })
 </script>

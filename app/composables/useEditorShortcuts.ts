@@ -19,10 +19,27 @@ export function useEditorShortcuts(options: EditorShortcuts) {
     )
       return
     const target = event.target
+    const field =
+      target instanceof Element
+        ? target.closest(
+            'input, textarea, [contenteditable]:not([contenteditable="false"])',
+          )
+        : null
     if (
-      target instanceof Element &&
-      target.closest(
-        'input, textarea, [contenteditable]:not([contenteditable="false"])',
+      field &&
+      !(
+        field instanceof HTMLInputElement &&
+        [
+          'checkbox',
+          'radio',
+          'button',
+          'submit',
+          'reset',
+          'range',
+          'color',
+          'file',
+          'image',
+        ].includes(field.type)
       )
     )
       return

@@ -490,6 +490,31 @@ describe('draft lifecycle', () => {
 })
 
 describe('sequential multi-tab conflicts', () => {
+  it.each([false, true])(
+    'rejects an old deletion confirmation after a remote Save (storage event: %s)',
+    (receiveStorageEvent) => {
+      const a = savedTab()
+      const confirmedRevision = a.notes.getEntry('note')!.revision
+      const b = tab(a.storage)
+      b.editor.openNote('note')
+      b.editor.changeTitle('Remote work saved after the confirmation opened')
+      expect(b.editor.save().ok).toBe(true)
+      if (receiveStorageEvent) a.notes.load()
+
+      expect(a.notes.deleteNote('note', confirmedRevision)).toMatchObject({
+        ok: false,
+        error: { code: 'conflict' },
+      })
+      a.notes.load()
+      expect(a.notes.getNote('note')?.title).toBe(
+        'Remote work saved after the confirmation opened',
+      )
+      expect(
+        a.notes.deleteNote('note', a.notes.getEntry('note')!.revision).ok,
+      ).toBe(true)
+    },
+  )
+
   it('Scenario E: observes deletion, preserves local text and cannot resurrect the old ID', () => {
     const a = savedTab()
     const b = tab(a.storage)

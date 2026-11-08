@@ -33,10 +33,12 @@ export function defineNotesStore(persistence: Persistence, id = 'notes') {
     function saveNote(note: Note, expectedRevision: string | null) {
       return accept(persistence.saveNote(note, expectedRevision))
     }
-    function deleteNote(noteId: string) {
+    function deleteNote(noteId: string, expectedRevision?: string) {
       const entry = getEntry(noteId)
       if (!entry) return failure('not-found', 'Заметка не найдена')
-      return accept(persistence.deleteNote(noteId, entry.revision))
+      return accept(
+        persistence.deleteNote(noteId, expectedRevision ?? entry.revision),
+      )
     }
 
     return {

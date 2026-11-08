@@ -9,6 +9,7 @@ const notes = useNotesStore()
 const editor = useEditorStore()
 const notice = useNotice()
 const deletion = ref<Note | null>(null)
+const deletionRevision = ref<string>()
 const confirmOpen = ref(false)
 const deleteError = ref('')
 const busy = ref(false)
@@ -23,14 +24,15 @@ function refresh() {
 }
 function askDelete(note: Note) {
   deletion.value = note
+  deletionRevision.value = notes.getEntry(note.id)?.revision
   deleteError.value = ''
   confirmOpen.value = true
 }
 async function remove() {
-  if (!deletion.value || busy.value) return
+  if (!deletion.value || !deletionRevision.value || busy.value) return
   busy.value = true
   const index = notes.notes.findIndex((note) => note.id === deletion.value?.id)
-  const result = notes.deleteNote(deletion.value.id)
+  const result = notes.deleteNote(deletion.value.id, deletionRevision.value)
   busy.value = false
   if (!result.ok) {
     deleteError.value = result.error.message

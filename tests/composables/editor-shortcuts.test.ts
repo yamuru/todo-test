@@ -15,7 +15,13 @@ vi.mock('vue', () => ({
 }))
 
 class EditableTarget {
-  closest = vi.fn(() => ({}))
+  closest = vi.fn((): object | null => this)
+}
+
+class InputTarget extends EditableTarget {
+  constructor(readonly type: string) {
+    super()
+  }
 }
 
 let keydown: ((event: KeyboardEvent) => void) | undefined
@@ -34,6 +40,7 @@ beforeEach(() => {
   lifecycle.unmount = undefined
   querySelector.mockReturnValue(null)
   vi.stubGlobal('Element', EditableTarget)
+  vi.stubGlobal('HTMLInputElement', InputTarget)
   vi.stubGlobal('document', {
     addEventListener,
     removeEventListener,
@@ -125,6 +132,41 @@ describe('editor shortcuts', () => {
     expect(press().preventDefault).not.toHaveBeenCalled()
     expect(undo).toHaveBeenCalledOnce()
   })
+
+  it.each([
+    'checkbox',
+    'radio',
+    'button',
+    'submit',
+    'reset',
+    'range',
+    'color',
+    'file',
+    'image',
+  ])('supports global Undo/Redo while a %s input has focus', (type) => {
+    const { undo, redo } = shortcuts()
+    const target = new InputTarget(type) as unknown as EventTarget
+    expect(press({ target }).preventDefault).toHaveBeenCalledOnce()
+    expect(undo).toHaveBeenCalledOnce()
+    expect(
+      press({ target, shiftKey: true }).preventDefault,
+    ).toHaveBeenCalledOnce()
+    expect(redo).toHaveBeenCalledOnce()
+  })
+
+  it.each(['text', 'search', 'email', 'password', 'url', 'tel', 'number'])(
+    'preserves native Undo/Redo in a %s input',
+    (type) => {
+      const { undo, redo } = shortcuts()
+      const target = new InputTarget(type) as unknown as EventTarget
+      expect(press({ target }).preventDefault).not.toHaveBeenCalled()
+      expect(
+        press({ target, shiftKey: true }).preventDefault,
+      ).not.toHaveBeenCalled()
+      expect(undo).not.toHaveBeenCalled()
+      expect(redo).not.toHaveBeenCalled()
+    },
+  )
 
   it('registers on mount and removes the same listener on unmount', () => {
     const undo = vi.fn()
